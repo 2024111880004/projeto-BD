@@ -1,0 +1,113 @@
+DROP TABLE IF EXISTS pagamento CASCADE; 
+DROP TABLE IF EXISTS reserva CASCADE;
+DROP TABLE IF EXISTS hospede CASCADE;
+DROP TABLE IF EXISTS quarto CASCADE;
+DROP TABLE IF EXISTS funcionario CASCADE;
+
+CREATE TABLE hospede (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    endereco VARCHAR(255),
+    data_nascimento DATE NOT NULL,
+    telefone VARCHAR(15)
+);
+
+CREATE TABLE quarto (
+    id SERIAL PRIMARY KEY,
+    numero VARCHAR(10) NOT NULL,
+    tipo VARCHAR(50) NOT NULL,
+    preco_diaria NUMERIC(10, 2) NOT NULL,
+    descricao TEXT
+);
+
+CREATE TABLE funcionario (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    cargo VARCHAR(100),
+    telefone VARCHAR(15),
+    email VARCHAR(100)
+);
+
+CREATE TABLE reserva (
+    id SERIAL PRIMARY KEY,
+    data_inicio DATE NOT NULL,
+    data_fim DATE NOT NULL,
+    id_hospede INT REFERENCES hospede(id) ON DELETE CASCADE,
+    id_quarto INT REFERENCES quarto(id) ON DELETE CASCADE,
+    id_funcionario INT REFERENCES funcionario(id) ON DELETE CASCADE
+);
+
+CREATE TABLE pagamento (
+    id SERIAL PRIMARY KEY,
+    valor NUMERIC(10, 2) NOT NULL,
+    data DATE NOT NULL,
+    id_reserva INT REFERENCES reserva(id) ON DELETE CASCADE
+);
+
+-- Inserindo dados de hóspedes
+INSERT INTO hospede (nome, endereco, data_nascimento, telefone)
+VALUES
+('Carlos Pereira', 'Rua das Palmeiras, 321', '1980-05-12', '(11) 99999-5555'),
+('Fernanda Lima', 'Avenida Atlântica, 789', '1995-03-22', '(21) 98888-6666');
+
+-- Inserindo dados de quartos
+INSERT INTO quarto (numero, tipo, preco_diaria, descricao)
+VALUES
+('101', 'Standard', 200.00, 'Quarto standard com uma cama de casal'),
+('202', 'Luxo', 350.00, 'Quarto de luxo com vista para o mar e varanda');
+
+-- Inserindo dados de funcionários
+INSERT INTO funcionario (nome, cargo, telefone, email)
+VALUES
+('João Mendes', 'Recepcionista', '(11) 91111-2222', 'joao.mendes@hotel.com'),
+('Mariana Silva', 'Gerente', '(21) 92222-3333', 'mariana.silva@hotel.com');
+
+-- Inserindo dados de reservas
+INSERT INTO reserva (data_inicio, data_fim, id_hospede, id_quarto, id_funcionario)
+VALUES
+('2024-12-10', '2024-12-15', 1, 1, 1),
+('2024-12-20', '2024-12-25', 2, 2, 2);
+
+-- Inserindo dados de pagamentos
+INSERT INTO pagamento (valor, data, id_reserva)
+VALUES
+(1000.00, '2024-12-15', 1),
+(1750.00, '2024-12-25', 2);
+
+-- Atualizando endereço do hóspede Fernanda Lima
+UPDATE hospede
+SET endereco = 'Rua Nova Esperança, 456'
+WHERE nome = 'Fernanda Lima';
+
+-- Atualizando valor do pagamento para a reserva de Carlos Pereira
+UPDATE pagamento
+SET valor = 1200.00
+WHERE id_reserva = 1;
+
+-- Consulta para relatório detalhado
+SELECT
+    h.nome AS hospede_nome,
+    h.data_nascimento AS hospede_data_nascimento,
+    h.telefone AS hospede_telefone,
+    h.endereco AS hospede_endereco,  
+    r.data_inicio AS reserva_data_inicio,
+    r.data_fim AS reserva_data_fim,
+    q.numero AS quarto_numero,
+    q.tipo AS quarto_tipo,
+    q.preco_diaria AS quarto_preco_diaria,
+    q.descricao AS quarto_descricao,
+    f.nome AS funcionario_nome,
+    f.cargo AS funcionario_cargo,
+    f.email AS funcionario_email,
+    p.valor AS pagamento_valor,
+    p.data AS pagamento_data
+FROM
+    hospede h
+LEFT JOIN
+    reserva r ON h.id = r.id_hospede
+LEFT JOIN
+    quarto q ON r.id_quarto = q.id
+LEFT JOIN
+    funcionario f ON r.id_funcionario = f.id
+LEFT JOIN
+    pagamento p ON r.id = p.id_reserva;
